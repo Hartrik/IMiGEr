@@ -371,6 +371,7 @@ class Group extends Node {
 		this.remove(false);
 
 		let vertexListCopy = this.vertexList.slice(0);
+		Layouts.circularLayout(vertexListCopy, this.position);
 		vertexListCopy.forEach(vertex => {
 			this.removeVertex(vertex);
 		});
