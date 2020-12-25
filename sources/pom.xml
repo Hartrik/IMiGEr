@@ -17,6 +17,7 @@
         <module>imiger-module</module>
         <module>imiger-spade-converter</module>
         <module>imiger-dot-converter</module>
+        <module>imiger-jacc</module>
     </modules>
 
     <properties>
