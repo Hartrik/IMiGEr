@@ -49,7 +49,7 @@ Open Diagram Spade
 	Open Browser To Base Path
 	${filePath}=		Normalize Path		${TEST DATA PATH}${/}spade${/}jira-project.json
 	Choose File				name:file		${filePath}
-	Select Radio Button		fileFormat		-968839389
+	Select Radio Button		fileFormat		990714169
 	Unselect Checkbox			enableInitialElimination
 	Click Button			Start visualization
 	Wait Until Element Is Not Visible		//div[@id="loader"]

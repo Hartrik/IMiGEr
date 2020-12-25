@@ -6,7 +6,6 @@ import org.apache.commons.fileupload.disk.DiskFileItemFactory;
 import org.apache.commons.fileupload.servlet.ServletFileUpload;
 
 import javax.servlet.http.HttpServletRequest;
-import java.io.UnsupportedEncodingException;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -31,7 +30,7 @@ public class FileLoader {
      *
      * @return loaded multipart data in map or empty map.
      */
-    public Map<String, String> loadFormFields() throws FileUploadException {
+    public Map<String, String> loadFormFields() {
         Map<String, String> resultMap = new HashMap<>();
         for (FileItem item : fileItems) {
             if (item.isFormField()) {
@@ -43,10 +42,10 @@ public class FileLoader {
         return resultMap;
     }
 
-    public String loadFileAsString(String name) throws UnsupportedEncodingException {
+    public byte[] loadFileAsBytes(String name) {
         for (FileItem item : fileItems) {
             if (!item.isFormField() && item.getName().equals(name)) {
-                return item.getString("UTF-8");
+                return item.get();
             }
         }
         return null;

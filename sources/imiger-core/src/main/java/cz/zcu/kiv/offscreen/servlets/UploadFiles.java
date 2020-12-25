@@ -6,7 +6,6 @@ import cz.zcu.kiv.offscreen.storage.FileLoader;
 import cz.zcu.kiv.offscreen.user.DataAccessException;
 import cz.zcu.kiv.offscreen.user.dao.DiagramDAO;
 import org.apache.commons.fileupload.FileUploadException;
-import org.apache.commons.lang3.StringUtils;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
@@ -79,12 +78,12 @@ public class UploadFiles extends BaseServlet {
                         "Filename '" + fileName + "' does not match file type pattern: " + pattern);
             }
 
-            String fileContent = fileLoader.loadFileAsString(fileName);
-            if (fileContent == null || StringUtils.isBlank(fileContent)) {
+            byte[] fileContent = fileLoader.loadFileAsBytes(fileName);
+            if (fileContent == null || fileContent.length == 0) {
                 throw new IllegalArgumentException("Empty file!");
             }
 
-            request.getSession().setAttribute("diagram_string", fileContent);
+            request.getSession().setAttribute("diagram_data", fileContent);
             request.getSession().setAttribute("diagram_type", fileType);
             request.getSession().setAttribute("diagram_filename", fileName);
 

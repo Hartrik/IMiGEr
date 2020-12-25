@@ -71,8 +71,8 @@
 					</div>
 
 					<div class="form-field">
-						Select type of data file:<br>
-						<label for="raw"><input type="radio" name="fileFormat" value="raw" id="raw" checked> Raw JSON</label><br>
+						Select processing type:<br>
+						<label for="raw"><input type="radio" name="fileFormat" value="raw" id="raw" checked> From Raw JSON</label><br>
 						<c:forEach items="${processingModules}" var="module">
 							<label for="${module.key}"><input type="radio" name="fileFormat" value="${module.key}" id="${module.key}"> ${module.value.moduleName}</label><br>
 						</c:forEach>

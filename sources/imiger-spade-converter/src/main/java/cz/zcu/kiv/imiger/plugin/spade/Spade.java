@@ -6,12 +6,14 @@ import cz.zcu.kiv.imiger.vo.Graph;
 import cz.zcu.kiv.imiger.plugin.spade.graph.GraphManager;
 import cz.zcu.kiv.imiger.plugin.spade.graph.loader.GraphJSONDataLoader;
 import cz.zcu.kiv.imiger.plugin.spade.graph.loader.JSONConfigLoader;
+
+import java.nio.charset.StandardCharsets;
 import java.util.regex.Pattern;
 
 public class Spade implements IModule {
     @Override
     public String getModuleName() {
-        return "Spade JSON";
+        return "From Spade JSON";
     }
 
     @Override
@@ -22,12 +24,14 @@ public class Spade implements IModule {
     /**
      * Convert input spade JSON to RAW JSON.
      *
-     * @param file String to be converted to raw JSON.
+     * @param data String to be converted to raw JSON.
      * @return Raw JSON.
      */
     @Override
-    public String getRawJson(String file) {
-        GraphManager graphManager = new GraphJSONDataLoader(file).loadData();
+    public String getRawJson(byte[] data) {
+        String stringToConvert = new String(data, StandardCharsets.UTF_8);
+
+        GraphManager graphManager = new GraphJSONDataLoader(stringToConvert).loadData();
         JSONConfigLoader configLoader = new JSONConfigLoader(graphManager);
 
         Graph graph = graphManager.createGraph(configLoader);

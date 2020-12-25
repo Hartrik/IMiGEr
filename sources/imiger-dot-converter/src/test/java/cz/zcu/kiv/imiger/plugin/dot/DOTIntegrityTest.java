@@ -1,5 +1,6 @@
 package cz.zcu.kiv.imiger.plugin.dot;
 
+import java.nio.charset.StandardCharsets;
 import org.junit.Test;
 
 import java.io.IOException;
@@ -44,7 +45,7 @@ public class DOTIntegrityTest {
         assertThat(integrityTestExpectedResult, is(not(nullValue())));
 
         DOT dotModule = new DOT();
-        String result = dotModule.getRawJson(integrityTestDOTFile);
+        String result = dotModule.getRawJson(integrityTestDOTFile.getBytes(StandardCharsets.UTF_8));
 
         assertThat(result, is(equalTo(integrityTestExpectedResult)));
     }

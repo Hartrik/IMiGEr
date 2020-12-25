@@ -12,6 +12,7 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
 import java.util.Optional;
+import java.nio.charset.StandardCharsets;
 
 /**
  * This class is used for loading diagrams from session.
@@ -37,21 +38,20 @@ public class GetSessionDiagram extends BaseServlet {
      * Add file which was uploaded and is stored in session to response or set http status code to BAD_REQUEST.
      */
     private void getDiagramFromSession(HttpServletRequest request, HttpServletResponse response) throws IOException {
-        String diagramToDisplay = (String) request.getSession().getAttribute("diagram_string");
+        byte[] diagramToDisplay = (byte[]) request.getSession().getAttribute("diagram_data");
         String diagramType = (String) request.getSession().getAttribute("diagram_type");
         String filename = (String) request.getSession().getAttribute("diagram_filename");
         String initialElimination = (String) request.getSession().getAttribute("diagram_initial_elimination");
 
-        if (StringUtils.isNotBlank(diagramToDisplay) && diagramType != null) {
-
+        if (diagramToDisplay.length != 0 && diagramType != null) {
             String rawJson;
 
             if (diagramType.equals("raw")) {
                 logger.debug("Processing Raw json");
-                rawJson = diagramToDisplay;
+                rawJson = new String(diagramToDisplay, StandardCharsets.UTF_8);
             } else {
                 Optional<String> optional = callModuleConverter(diagramType, diagramToDisplay);
-                if(optional.isPresent()){
+                if (optional.isPresent()){
                     rawJson = optional.get();
                 } else {
                     response.setStatus(HttpServletResponse.SC_NOT_ACCEPTABLE);
@@ -68,11 +68,10 @@ public class GetSessionDiagram extends BaseServlet {
             response.getWriter().write(jsonObject.toString());
             response.getWriter().flush();
             logger.debug("Response OK");
-            return;
+        } else {
+            response.setStatus(HttpServletResponse.SC_BAD_REQUEST);
+            logger.debug("Response BAD REQUEST");
         }
-
-        response.setStatus(HttpServletResponse.SC_BAD_REQUEST);
-        logger.debug("Response BAD REQUEST");
     }
 
     /**
@@ -80,10 +79,10 @@ public class GetSessionDiagram extends BaseServlet {
      * blank, method returns empty Optional.
      *
      * @param type type of converter which is key to map of modules
-     * @param stringToConvert string which will be converted
+     * @param bytes data which will be converted
      * @return Optional of RAW JSON or empty Optional
      */
-    private Optional<String> callModuleConverter(String type, String stringToConvert){
+    private Optional<String> callModuleConverter(String type, byte[] bytes) {
         logger.debug("Processing json with module");
 
         IModule module = ModuleProvider.getInstance().getModules().get(type);
@@ -93,7 +92,7 @@ public class GetSessionDiagram extends BaseServlet {
         }
 
         try {
-            String rawJson = String.valueOf(module.getRawJson(stringToConvert));
+            String rawJson = String.valueOf(module.getRawJson(bytes));
 
             if (StringUtils.isBlank(rawJson)){
                 return Optional.empty();

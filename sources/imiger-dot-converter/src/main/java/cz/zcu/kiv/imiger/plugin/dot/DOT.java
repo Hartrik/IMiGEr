@@ -7,6 +7,8 @@ import cz.zcu.kiv.imiger.plugin.dot.loader.BaseDOTLoader;
 import cz.zcu.kiv.imiger.plugin.dot.loader.DigraphDOTLoader;
 import cz.zcu.kiv.imiger.spi.IModule;
 import cz.zcu.kiv.imiger.vo.Graph;
+
+import java.nio.charset.StandardCharsets;
 import java.util.regex.Pattern;
 
 /**
@@ -21,7 +23,7 @@ public class DOT implements IModule {
      */
     @Override
     public String getModuleName() {
-        return "DOT file";
+        return "From DOT file";
     }
 
     @Override
@@ -33,16 +35,18 @@ public class DOT implements IModule {
      * Retrieves DOT file which has to be converted to raw JSON that
      * IMiGEr support.
      *
-     * @param stringToConvert String to be converted to raw JSON.
+     * @param data String to be converted to raw JSON.
      * @return - raw JSON as string
      */
     @Override
-    public String getRawJson(String stringToConvert) {
+    public String getRawJson(byte[] data) {
+        String stringToConvert = new String(data, StandardCharsets.UTF_8);
+
         BaseDOTLoader<VertexDTO, EdgeDTO> loader = new DigraphDOTLoader(stringToConvert);
         GraphFactory graphFactory = new GraphFactory(loader);
         Graph graph = graphFactory.createGraph();
 
-        if(!graph.getVertices().isEmpty()) {
+        if (!graph.getVertices().isEmpty()) {
             Gson gson = new Gson();
             return gson.toJson(graph, Graph.class);
         } else {

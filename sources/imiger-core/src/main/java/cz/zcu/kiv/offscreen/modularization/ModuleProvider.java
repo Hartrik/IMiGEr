@@ -58,7 +58,10 @@ public class ModuleProvider {
         logger.info("Processing modules.");
 
         modules.clear();
-        unprocessedModules.forEachRemaining(module -> modules.put(String.valueOf(module.getModuleName().hashCode()), module));
+        unprocessedModules.forEachRemaining(module -> {
+            logger.info("Module: " + module.getModuleName());
+            modules.put(String.valueOf(module.getModuleName().hashCode()), module);
+        });
 
         logger.debug("Modules were loaded and processed in " + (System.nanoTime() - startTime) / 1000000d + " milliseconds");
     }
