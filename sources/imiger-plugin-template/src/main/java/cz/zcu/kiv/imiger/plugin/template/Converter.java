@@ -20,7 +20,7 @@ public class Converter implements IModule {
      * Convert input file to RAW JSON and return it.
      */
     @Override
-    public String getRawJson(String inputFile) {
+    public String getRawJson(byte[] data) {
         Graph graph = new Graph();
         return new Gson().toJson(graph);
     }
