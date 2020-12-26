@@ -4,6 +4,7 @@
 sources/*/target/
 sources/*/logs/
 sources/imiger-core/src/main/webapp/node_modules/
+sources/imiger-jacc/comparator.log
 
 **/.DS_Store
 .DS_Store

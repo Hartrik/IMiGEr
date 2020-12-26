@@ -11,7 +11,7 @@ class Attribute {
 
 		this.name = props[0];
 		this.value = props[1];
-		this.dataType = attributeType.dataType;
+		this.dataType = attributeType === undefined ? 'STRING' : attributeType.dataType;
 	}
 
 	/**
