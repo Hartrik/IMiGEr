@@ -3,15 +3,11 @@ package cz.zcu.kiv.imiger.plugin.jacc;
 import cz.zcu.kiv.ccu.ApiCmpStateResult;
 import cz.zcu.kiv.ccu.ApiInterCompatibilityResult;
 import cz.zcu.kiv.imiger.vo.*;
-import cz.zcu.kiv.jacc.cmp.JComparator;
-import cz.zcu.kiv.jacc.javatypes.*;
-import cz.zcu.kiv.typescmp.CmpResult;
-import cz.zcu.kiv.typescmp.CmpResultNode;
+import cz.zcu.kiv.jacc.javatypes.JClass;
 
 import java.io.File;
-import java.io.IOException;
-import java.io.InputStream;
 import java.util.*;
+import java.util.stream.Collectors;
 import org.apache.log4j.Logger;
 
 // From cocaex, only custom graph interface,
@@ -30,13 +26,10 @@ public class GraphMaker {
     private Graph graph;
     private Map<String, Vertex> vertices = new LinkedHashMap<>();
     private Logger logger = Logger.getLogger(GraphMaker.class);
-    private int level;
-    private String compInfoInnerJSON;
 
     private ApiInterCompatibilityResult comparisonResult;
     private File[] uploadedFiles;
     private Set<String> origins;
-    private Properties jaccMessages;
 
     private static final File NOT_FOUND = null;
 
@@ -48,23 +41,6 @@ public class GraphMaker {
         this.uploadedFiles = uploadedFiles;
         this.origins = comparisonResult.getOriginsImportingIncompatibilities();
         this.comparisonResult = comparisonResult;
-
-        jaccMessages = new Properties();
-        InputStream in = null;
-        try {
-            in = JComparator.class.getResourceAsStream("messages.properties");
-            jaccMessages.load(in);
-        } catch (IOException e) {
-            logger.trace(e);
-        } finally {
-            if (in != null) {
-                try {
-                    in.close();
-                } catch (IOException e) {
-                    logger.trace(e);
-                }
-            }
-        }
     }
 
     /**
@@ -104,31 +80,20 @@ public class GraphMaker {
         // compatibility checking START
         try {
 
-            Set<CmpResult<File>> result = new HashSet<CmpResult<File>>();
-            String compInfoJSON = "";
-            this.compInfoInnerJSON = "";
-            String compInfoJSONNF = "";
             String NFClassName = "";
             File firstOrigin = null;
             File secondOrigin = null;
             File firstOriginNF = null;
             File secondOriginNF = null;
             List<String> NFClasses = new ArrayList<String>();
-            for (String origin : this.origins) { // cyklus pres (ne)kompatibilni JAR
+            for (String origin : this.origins) {
                 incompatibleClasses = comparisonResult.getClassesImportingIncompatibilities(origin);
 
                 for (JClass incompatibleClass : incompatibleClasses) {
                     apiCmpResult = comparisonResult.getIncompatibleResults(incompatibleClass, origin);
                     for (ApiCmpStateResult apiCmpResult1 : apiCmpResult) {
                         if (apiCmpResult1.getResult().getSecondObject() != null) {
-                            result.add(apiCmpResult1.getResult());
 
-                            List<CmpResultNode> children = apiCmpResult1.getResult().getChildren();
-
-                            this.level = 0;
-                            this.compInfoInnerJSON += "";
-                            this.findCompatibilityCause(children, incompatibleClass.getName(), apiCmpResult1.getResult().getSecondObject().getName(), "");
-                            this.compInfoInnerJSON += ",";
                             if (firstOrigin == null && secondOrigin == null) {
                                 firstOrigin = apiCmpResult1.getResult().getFirstObject();
                                 secondOrigin = apiCmpResult1.getResult().getSecondObject();
@@ -137,40 +102,33 @@ public class GraphMaker {
                             NFClassName = apiCmpResult1.getResult().getFirstObject().getName();
                             if (!NFClassName.equals("") && !NFClasses.contains(NFClassName)) {
                                 NFClasses.add(NFClassName);
-                                compInfoJSONNF += "{theClass: \"" + NFClassName + "\", incomps: [ ";
-                                compInfoJSONNF += "]},";
                             }
 
-                            if (firstOriginNF == null && secondOriginNF == null) {
+                            if (firstOriginNF == null) {
                                 firstOriginNF = apiCmpResult1.getResult().getFirstObject();
                                 secondOriginNF = null;
                             }
                         }
-
                     }
-
-                    if (!this.compInfoInnerJSON.equals(",") && !this.compInfoInnerJSON.equals("")) {
-                        compInfoJSON += "{theClass: \"" + incompatibleClass.getName() + "\", incomps: [ ";
-                        compInfoJSON += this.compInfoInnerJSON;
-                        compInfoJSON += "]},";
-                    }
-                    this.compInfoInnerJSON = "";
-                    NFClassName = "";
-
                 }
+
+                String incomp = incompatibleClasses.stream().map(JClass::getShortName).distinct().collect(Collectors.joining(", ", "[", "]"));
+                String notFound = NFClasses.stream().collect(Collectors.joining(", ", "[", "]"));
+                List<String[]> attributes = Collections.singletonList(
+                        new String[]{"compInfo", "incompatibleClasses: " + incomp + ", classesNotFound: " + notFound});
                 NFClasses.clear();
 
                 if (firstOrigin != null) {
                     id++;
                     edge = new Edge(id, vertexId(createSymbolicName(firstOrigin)), vertexId(createSymbolicName(secondOrigin)), "",
-                            Collections.singletonList(new SubedgeInfo(id, DEFAULT_ARCHETYPE_INDEX, Collections.singletonList(new String[]{"compInfo", "[" + compInfoJSON + "]"}))));
+                            Collections.singletonList(new SubedgeInfo(id, DEFAULT_ARCHETYPE_INDEX, attributes)));
                     this.graph.getEdges().add(edge);
                 }
 
                 if (firstOriginNF != null) {
                     id++;
                     edge = new Edge(id, vertexId(createSymbolicName(secondOriginNF)), vertexId(createSymbolicName(firstOriginNF)), "",
-                            Collections.singletonList(new SubedgeInfo(id, DEFAULT_ARCHETYPE_INDEX, Collections.singletonList(new String[]{"compInfo", "[" + compInfoJSONNF + "]"}))));
+                            Collections.singletonList(new SubedgeInfo(id, DEFAULT_ARCHETYPE_INDEX, attributes)));
                     this.graph.getEdges().add(edge);
                 }
 
@@ -178,8 +136,6 @@ public class GraphMaker {
                 secondOrigin = null;
                 firstOriginNF = null;
                 secondOriginNF = null;
-                compInfoJSON = "";
-                compInfoJSONNF = "";
 
             }
         } catch (Exception e) {
@@ -224,152 +180,6 @@ public class GraphMaker {
             throw new Exception(e);
         }
         return this.graph;
-    }
-
-    /**
-     * Recursive function for traversing tree with incompatibility information
-     * Creates JSON string
-     *
-     * @param children
-     * @param className
-     * @param jarName
-     * @param corrStrategy
-     */
-    public void findCompatibilityCause(List<CmpResultNode> children, String className, String jarName, String corrStrategy) {
-        for (CmpResultNode child : children) {
-            Object o = child.getResult().getFirstObject();
-            this.compInfoInnerJSON += "{desc: {level: \"" + String.valueOf(this.level);
-
-            if (child.isIncompatibilityCause()) {
-
-                if (o instanceof HasName) {
-                    this.compInfoInnerJSON += "\", name: \"" + this.jaccMessages.getProperty(child.getContentCode()) + ": " + ((HasName) o).getName();
-
-                    this.compInfoInnerJSON
-                            += (!child.getResult().getInherentDiff().name().equals("DEL") ? "\", objectNameFirst: \"" + ((HasName) o).getName() : "")
-                            + (!child.getResult().getInherentDiff().name().equals("DEL") ? "\", objectNameSecond: \"" + ((HasName) child.getResult().getSecondObject()).getName() : "");
-                } else {
-                    if (o instanceof JMethod) {
-                        this.compInfoInnerJSON += "\", name: \"M " + getCompleteMethodName(o);
-                    } else {
-                        this.compInfoInnerJSON += "\", name: \"" + this.jaccMessages.getProperty(child.getContentCode());
-                    }
-
-                    this.compInfoInnerJSON
-                            += (!child.getResult().getInherentDiff().name().equals("DEL") ? "\", objectNameFirst: \"" + o.toString() : "")
-                            + (!child.getResult().getInherentDiff().name().equals("DEL") ? "\", objectNameSecond: \"" + child.getResult().getSecondObject().toString() : "");
-
-                }
-
-                this.compInfoInnerJSON += "\", className: \"" + className;
-                this.compInfoInnerJSON += "\", jarName: \"" + jarName;
-
-                String incompName = this.getIncompatibilityName(child, corrStrategy);
-                if (incompName.equals("")) {
-                    this.compInfoInnerJSON += "\", incompName: \"Incompatible " + this.jaccMessages.getProperty(child.getContentCode()) + " -> " + corrStrategy; //child.getResult().getStrategy().name();
-                } else {
-                    this.compInfoInnerJSON += "\", incompName: \"" + incompName + (child.getResult().getInherentDiff().name().equals("DEL") ? " is missing -> " + child.getResult().getStrategy().name() : "");
-                }
-
-                this.compInfoInnerJSON += "\", isIncompCause: \"" + String.valueOf(child.isIncompatibilityCause())
-                        + "\", strategy: \"" + child.getResult().getStrategy().name()
-                        + "\", difference: \"" + child.getResult().getInherentDiff().name() + "\"}, subtree:";
-
-            } else {
-                if (o instanceof JMethod) {
-                    this.compInfoInnerJSON += "\", name: \"<span class='entity'>M</span> " + getCompleteMethodName(o);
-                } else if (o instanceof JField) {
-                    this.compInfoInnerJSON += "\", name: \"<span class='entity'>F</span> " + getShortName2(o.toString());
-
-                } else if (o instanceof HasName) {
-                    this.compInfoInnerJSON += "\", name: \"" + this.jaccMessages.getProperty(child.getContentCode()) + ": " + ((HasName) o).getName();
-                } else {
-                    this.compInfoInnerJSON += "\", name: \"" + this.jaccMessages.getProperty(child.getContentCode());
-                }
-
-                this.compInfoInnerJSON += "\", isIncompCause: \"" + String.valueOf(child.isIncompatibilityCause()) + "\"}, subtree: ";
-
-            }
-            if (!child.getResult().childrenCompatible()) {
-                String strategy = "";
-                if (this.level == 1) {
-                    strategy = child.getResult().getStrategy().name();
-                }
-                this.level++;
-                this.compInfoInnerJSON += "[";
-                // tady se podivat na child.getResult()
-                this.findCompatibilityCause(child.getResult().getChildren(), className, jarName, strategy);
-                this.level--;
-                this.compInfoInnerJSON += "],";
-            } else {
-                this.compInfoInnerJSON += "[],";
-            }
-            this.compInfoInnerJSON += "},";
-        }
-
-    }
-
-    private String getShortName(String longName) {
-        return longName.substring(longName.lastIndexOf('.') + 1);
-    }
-
-    private String getShortName2(String longName) {
-        return longName.substring(longName.lastIndexOf(':') + 1);
-    }
-
-    private String getCompleteMethodName(Object o) {
-        String methodName = "";
-        methodName += getShortName(((JMethod) o).getReturnType().getName());
-        methodName += " " + ((JMethod) o).getName();
-        methodName += " (";
-        for (JType type : ((JMethod) o).getParameterTypes()) {
-            methodName += getShortName(type.getName()) + ", ";
-        }
-        methodName = methodName.replaceAll(", $", "");
-        methodName += ")";
-        return methodName;
-    }
-
-    private String getFieldName(Object o) {
-        return ((JField) o).getType().getName() + " " + ((JField) o).getName();
-    }
-
-    private String getIncompatibilityName(CmpResultNode child, String corrStrategy) {
-        Object o = child.getResult().getFirstObject();
-
-        String incompName = "";
-        switch (child.getContentCode()) {
-            case "cmp.child.method.return.type":
-                incompName = this.jaccMessages.getProperty(child.getContentCode()) + " different -> " + corrStrategy;
-                break;
-            case "cmp.child.method.param.type": {
-                if (o instanceof HasName) {
-                    incompName = "Parameter " + getShortName(((HasName) o).getName()) + " different -> " + corrStrategy;
-                } else {
-                    incompName = "Parameter " + getShortName(o.toString()) + " different -> " + corrStrategy;
-                }
-            }
-            break;
-            case "cmp.child.method.invocation":
-                incompName = "Invoke Virtual" + " -> " + child.getResult().getStrategy().name();
-                break;
-            case "cmp.child.method":
-                incompName = "<span class='entity'>M</span> " + getCompleteMethodName(o);
-                break;
-            case "cmp.child.constructor":
-                incompName = "<span class='entity'>C</span> " + getCompleteMethodName(o);
-                break;
-            case "cmp.child.field":
-                incompName = "<span class='entity'>F</span> " + getFieldName(o);
-                break;
-            case "cmp.child.modifier":
-                incompName = "<span class='entity'>P</span> " + o.toString() + " -> " + corrStrategy;
-                break;
-            default:
-                incompName = "";
-                break;
-        }
-        return incompName;
     }
 
 }
