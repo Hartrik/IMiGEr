@@ -106,8 +106,9 @@ public class GraphMaker {
                     }
                 }
 
-                String incomp = incompatibleClasses.stream().map(JClass::getShortName).distinct().collect(Collectors.joining(", ", "[", "]"));
-                String notFound = NFClasses.stream().collect(Collectors.joining(", ", "[", "]"));
+                String incomp = incompatibleClasses.stream().map(JClass::getShortName)
+                        .distinct().sorted().collect(Collectors.joining(", ", "[", "]"));
+                String notFound = NFClasses.stream().sorted().collect(Collectors.joining(", ", "[", "]"));
                 List<String[]> attributes = Collections.singletonList(
                         new String[]{"compInfo", "incompatibleClasses: " + incomp + ", classesNotFound: " + notFound});
                 NFClasses.clear();
@@ -121,7 +122,7 @@ public class GraphMaker {
 
                 if (firstOriginNF != null) {
                     id++;
-                    Edge edge = new Edge(id, vertexId(createSymbolicName(firstOriginNF)), vertexId(createSymbolicName(secondOriginNF)), "",
+                    Edge edge = new Edge(id, vertexId(createSymbolicName(secondOriginNF)), vertexId(createSymbolicName(firstOriginNF)), "",
                             Collections.singletonList(new SubedgeInfo(id, DEFAULT_ARCHETYPE_INDEX, attributes)));
                     this.graph.getEdges().add(edge);
                 }
