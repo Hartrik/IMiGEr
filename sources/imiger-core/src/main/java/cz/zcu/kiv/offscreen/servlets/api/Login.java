@@ -34,7 +34,7 @@ public class Login extends BaseServlet {
             logger.debug("Empty password");
         }
 
-        if (errors.size() == 0) {
+        if (errors.entrySet().size() == 0) {
             UserDAO userDAO = new UserDAO();
             Map<String, Object> user = userDAO.login(username, password);
 

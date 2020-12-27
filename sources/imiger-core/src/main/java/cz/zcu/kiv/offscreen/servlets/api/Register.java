@@ -70,7 +70,7 @@ public class Register extends BaseServlet {
 			logger.debug("Passwords not match");
 		}
 
-    	if (errors.size() == 0) {
+    	if (errors.entrySet().size() == 0) {
     		userDAO.register(username, name, password, request.getSession().getId(), email);
 
 			response.setStatus(HttpServletResponse.SC_CREATED);

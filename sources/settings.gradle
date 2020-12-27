@@ -1,0 +1,16 @@
+
+// https://github.com/ReliSA/IMiGEr
+
+rootProject.name = 'imiger'
+
+include ':imiger-core'
+include ':imiger-module'
+include ':imiger-spade-converter'
+include ':imiger-dot-converter'
+include ':imiger-jacc'
+
+project(':imiger-core').projectDir = "$rootDir/imiger-core" as File
+project(':imiger-module').projectDir = "$rootDir/imiger-module" as File
+project(':imiger-spade-converter').projectDir = "$rootDir/imiger-spade-converter" as File
+project(':imiger-dot-converter').projectDir = "$rootDir/imiger-dot-converter" as File
+project(':imiger-jacc').projectDir = "$rootDir/imiger-jacc" as File

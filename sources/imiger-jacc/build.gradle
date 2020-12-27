@@ -1,0 +1,13 @@
+
+dependencies {
+    compile project(':imiger-module')
+
+    //
+    compile fileTree(include: ['*.jar'], dir: 'libs')
+
+    compile group: 'com.google.code.gson', name: 'gson', version:'2.8.5'
+    compile group: 'org.apache.logging.log4j', name: 'log4j-api', version:'2.11.1'
+    compile group: 'org.apache.logging.log4j', name: 'log4j-core', version:'2.11.1'
+
+    testCompile group: 'junit', name: 'junit', version:'4.12'
+}

@@ -2,7 +2,9 @@
 *.iml
 
 sources/*/target/
+sources/*/build/
 sources/*/logs/
+sources/.gradle
 sources/imiger-core/src/main/webapp/node_modules/
 sources/imiger-jacc/comparator.log
 
