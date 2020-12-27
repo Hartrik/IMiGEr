@@ -20,7 +20,7 @@ public class JaCCModule implements IModule {
      */
     @Override
     public String getModuleName() {
-        return "Dependency graph of Java application (ZIP with JARs)";
+        return "Check compatibility of Java application using JaCC (ZIP with JARs)";
     }
 
     @Override
