@@ -71,26 +71,20 @@ public class GraphMaker {
      * This method creates the edges and adds them to the graph.
      */
     private void createEdges() throws Exception{
-        Set<JClass> incompatibleClasses;
-        Set<ApiCmpStateResult> apiCmpResult;
-
-        Edge edge;
         int id = 0;
 
         // compatibility checking START
         try {
-
-            String NFClassName = "";
             File firstOrigin = null;
             File secondOrigin = null;
             File firstOriginNF = null;
             File secondOriginNF = null;
             List<String> NFClasses = new ArrayList<String>();
             for (String origin : this.origins) {
-                incompatibleClasses = comparisonResult.getClassesImportingIncompatibilities(origin);
+                Set<JClass> incompatibleClasses = comparisonResult.getClassesImportingIncompatibilities(origin);
 
                 for (JClass incompatibleClass : incompatibleClasses) {
-                    apiCmpResult = comparisonResult.getIncompatibleResults(incompatibleClass, origin);
+                    Set<ApiCmpStateResult> apiCmpResult = comparisonResult.getIncompatibleResults(incompatibleClass, origin);
                     for (ApiCmpStateResult apiCmpResult1 : apiCmpResult) {
                         if (apiCmpResult1.getResult().getSecondObject() != null) {
 
@@ -99,9 +93,9 @@ public class GraphMaker {
                                 secondOrigin = apiCmpResult1.getResult().getSecondObject();
                             }
                         } else {
-                            NFClassName = apiCmpResult1.getResult().getFirstObject().getName();
-                            if (!NFClassName.equals("") && !NFClasses.contains(NFClassName)) {
-                                NFClasses.add(NFClassName);
+                            String nfClassName = apiCmpResult1.getResult().getFirstObject().getName();
+                            if (!nfClassName.equals("") && !NFClasses.contains(nfClassName)) {
+                                NFClasses.add(nfClassName);
                             }
 
                             if (firstOriginNF == null) {
@@ -120,14 +114,14 @@ public class GraphMaker {
 
                 if (firstOrigin != null) {
                     id++;
-                    edge = new Edge(id, vertexId(createSymbolicName(firstOrigin)), vertexId(createSymbolicName(secondOrigin)), "",
+                    Edge edge = new Edge(id, vertexId(createSymbolicName(firstOrigin)), vertexId(createSymbolicName(secondOrigin)), "",
                             Collections.singletonList(new SubedgeInfo(id, DEFAULT_ARCHETYPE_INDEX, attributes)));
                     this.graph.getEdges().add(edge);
                 }
 
                 if (firstOriginNF != null) {
                     id++;
-                    edge = new Edge(id, vertexId(createSymbolicName(secondOriginNF)), vertexId(createSymbolicName(firstOriginNF)), "",
+                    Edge edge = new Edge(id, vertexId(createSymbolicName(firstOriginNF)), vertexId(createSymbolicName(secondOriginNF)), "",
                             Collections.singletonList(new SubedgeInfo(id, DEFAULT_ARCHETYPE_INDEX, attributes)));
                     this.graph.getEdges().add(edge);
                 }
